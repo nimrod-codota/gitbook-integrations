@@ -1,3 +1,4 @@
+
 {
     "extends": ["@gitbook/eslint-config/integration"]
 }
