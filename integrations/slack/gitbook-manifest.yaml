@@ -1,6 +1,7 @@
 name: slack
 title: Slack
 icon: ./assets/icon.png
+organization: gitbook
 description: Ask questions, get answers and add information to your GitBook knowledge base, right in Slack.
 categories:
     - collaboration
@@ -81,3 +82,4 @@ secrets:
     CLIENT_ID: ${{ env.SLACK_CLIENT_ID }}
     CLIENT_SECRET: ${{ env.SLACK_CLIENT_SECRET }}
     SIGNING_SECRET: ${{ env.SLACK_SIGNING_SECRET }}
+target: space

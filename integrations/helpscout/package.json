@@ -1,0 +1,16 @@
+{
+    "name": "@gitbook/integration-helpscout",
+    "private": true,
+    "version": "1.4.0",
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "publish": "gitbook publish ."
+    },
+    "dependencies": {
+        "@gitbook/runtime": "*"
+    },
+    "devDependencies": {
+        "@gitbook/cli": "workspace:*",
+        "@gitbook/tsconfig": "workspace:*"
+    }
+}

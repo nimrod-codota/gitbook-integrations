@@ -13,6 +13,8 @@ import { promptNewIntegration } from './init';
 import { DEFAULT_MANIFEST_FILE, resolveIntegrationManifestPath } from './manifest';
 import { publishIntegration, unpublishIntegration } from './publish';
 import { authenticate, whoami } from './remote';
+import { tailLogs } from './tail';
+import { checkIntegrationBuild } from './check';
 
 program
     .name(Object.keys(packageJSON.bin)[0])
@@ -57,9 +59,11 @@ program
 program
     .command('dev')
     .description('run the integrations dev server')
-    .argument('[space]', 'ID of the development space', undefined)
-    .action(async (space?: string) => {
-        await startIntegrationsDevServer(space);
+    .option('-a, --all', 'Proxy all events from all installations')
+    .action(async (options) => {
+        await startIntegrationsDevServer({
+            all: options.all ?? false,
+        });
     });
 
 program
@@ -68,7 +72,7 @@ program
     .option(
         '-o, --organization <organization>',
         'organization to publish to',
-        process.env.GITBOOK_ORGANIZATION
+        process.env.GITBOOK_ORGANIZATION,
     )
     .description('publish a new version of the integration')
     .action(async (filePath, options) => {
@@ -76,7 +80,7 @@ program
             await resolveIntegrationManifestPath(path.resolve(process.cwd(), filePath)),
             {
                 ...(options.organization ? { organization: options.organization } : {}),
-            }
+            },
         );
     });
 
@@ -95,6 +99,20 @@ program
         if (response.confirm) {
             await unpublishIntegration(name);
         }
+    });
+
+program
+    .command('tail')
+    .description('fetch and print the execution logs of the integration')
+    .action(async () => {
+        await tailLogs();
+    });
+
+program
+    .command('check')
+    .description('check the integration build')
+    .action(async () => {
+        await checkIntegrationBuild();
     });
 
 checkNodeVersion({ node: '>= 18' }, (error, result) => {
@@ -123,6 +141,6 @@ checkNodeVersion({ node: '>= 18' }, (error, result) => {
         (error) => {
             console.error(error.message);
             process.exit(1);
-        }
+        },
     );
 });

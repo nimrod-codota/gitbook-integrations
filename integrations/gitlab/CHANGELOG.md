@@ -1,5 +1,41 @@
 # @gitbook/integration-gitlab
 
+## 0.5.2
+
+### Patch Changes
+
+-   953d82a: Throw 400 exposable errors instead of internal errors when Git sync config value are missing/incomplete
+
+## 0.5.1
+
+### Patch Changes
+
+-   62f857f: Don't catch router errors to allow them to be caught and processed in GitHub and GitLab integrations
+
+## 0.5.0
+
+### Minor Changes
+
+-   9bce519: Use ExposableError for public errors in GitLab integration
+
+## 0.4.0
+
+### Minor Changes
+
+-   ee488d1: Bump integrations' target
+
+## 0.3.0
+
+### Minor Changes
+
+-   0b70110: Update configuration of GitSync integrations
+
+## 0.2.0
+
+### Minor Changes
+
+-   c3e0c55: GitHub & GitLab: Normalize project directory to always be a relative path
+
 ## 0.1.0
 
 ### Minor Changes

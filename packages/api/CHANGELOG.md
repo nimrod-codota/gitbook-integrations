@@ -1,5 +1,161 @@
 # @gitbook/api
 
+## 0.77.0
+
+### Minor Changes
+
+-   c3a7bb5: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.76.0
+
+### Minor Changes
+
+-   672a718: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.75.0
+
+### Minor Changes
+
+-   763949e: Adding site space information to page views
+
+## 0.74.0
+
+### Minor Changes
+
+-   825b8c1: Bump @gitbook/api to use the latest API spec
+
+## 0.73.0
+
+### Minor Changes
+
+-   94036f0: Bump GitBook API to most recent version.
+
+## 0.72.0
+
+### Minor Changes
+
+-   0f9bcb4: Bump @gitbook/api to use the latest API spec
+
+## 0.71.0
+
+### Minor Changes
+
+-   788cc8a: Bump GitBook API to most recent version.
+
+## 0.70.0
+
+### Minor Changes
+
+-   fa8e361: Bump the gitbook API
+
+## 0.69.0
+
+### Minor Changes
+
+-   6df6ac5: Update the API client with the latest OpenAPI specification
+
+## 0.68.0
+
+### Minor Changes
+
+-   33e8900: Update the API client with the latest OpenAPI specification
+
+## 0.67.0
+
+### Minor Changes
+
+-   597ba64: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.66.0
+
+### Minor Changes
+
+-   3b3316a: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.65.0
+
+### Minor Changes
+
+-   0cd6eb4: Update the API client with the latest OpenAPI specification
+
+## 0.64.1
+
+### Patch Changes
+
+-   76f2716: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.63.0
+
+### Minor Changes
+
+-   5956e14: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.62.0
+
+### Minor Changes
+
+-   af3d4b1: Update API client with latest OpenAPI spec.
+
+## 0.61.0
+
+### Minor Changes
+
+-   0d9a2aa: Bump @gitbook/api to use the latest spec
+
+## 0.60.0
+
+### Minor Changes
+
+-   dfbbfb0: Update API client with latest OpenAPI spec
+
+## 0.59.0
+
+### Minor Changes
+
+-   75466c1: Update API client with latest OpenAPI spec
+
+## 0.58.0
+
+### Minor Changes
+
+-   a04dfb8: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.57.0
+
+### Minor Changes
+
+-   d3fcacc: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.56.0
+
+### Minor Changes
+
+-   436f5b6: Update API client with latest OpenAPI spec
+
+## 0.55.0
+
+### Minor Changes
+
+-   8f8179d: Update API client with latest OpenAPI spec
+
+## 0.54.0
+
+### Minor Changes
+
+-   e3944b8: Adds new endpoint for searching specific to Sites
+
+## 0.53.0
+
+### Minor Changes
+
+-   59ea476: Bump @gitbook/api to use the latest OpenAPI spec
+
+## 0.52.0
+
+### Minor Changes
+
+-   35b8bf0: Add in source details when there is no AI answer
+
 ## 0.51.0
 
 ### Minor Changes

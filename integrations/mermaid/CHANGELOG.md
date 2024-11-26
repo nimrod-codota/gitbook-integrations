@@ -1,5 +1,47 @@
 # @gitbook/integration-mermaid
 
+## 0.3.0
+
+### Minor Changes
+
+-   1803bae: Update mermaid to version 11
+
+## 0.2.1
+
+### Patch Changes
+
+-   97786d8: Make the mermaid block recover from errors when rendering; to ensure the user can continue editing it
+
+## 0.2.0
+
+### Minor Changes
+
+-   ee488d1: Bump integrations' target
+
+## 0.1.6
+
+### Patch Changes
+
+-   5a92f1b: Fix bug when mermaid block is quickly updated, using a rendering queue
+
+## 0.1.5
+
+### Patch Changes
+
+-   ac9074b: Add debug logs to mermaid iframe code
+
+## 0.1.4
+
+### Patch Changes
+
+-   f7a295b: Add bust cache parameter to mermaid iframe url
+
+## 0.1.3
+
+### Patch Changes
+
+-   86a80b2: Improve robustness of the mermaid iframe
+
 ## 0.1.2
 
 ### Patch Changes

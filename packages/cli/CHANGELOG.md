@@ -1,5 +1,39 @@
 # @gitbook/cli
 
+## 0.19.0
+
+### Minor Changes
+
+-   a477524: Bump @gitbook/cli to use the latest OpenAPI spec
+
+## 0.18.1
+
+### Patch Changes
+
+-   f95262e: Fix missing dependencies when running the CLI
+
+## 0.18.0
+
+### Minor Changes
+
+-   bfe5f27: Improve `dev` command to no longer require a space and handle all events in the owning organization
+
+### Patch Changes
+
+-   Updated dependencies [76f2716]
+    -   @gitbook/api@0.64.1
+
+## 0.17.0
+
+### Minor Changes
+
+-   d3fcacc: Remove entities from CLI
+
+### Patch Changes
+
+-   Updated dependencies [d3fcacc]
+    -   @gitbook/api@0.57.0
+
 ## 0.16.0
 
 ### Minor Changes

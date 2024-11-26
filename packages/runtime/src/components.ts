@@ -1,14 +1,23 @@
 import {
     ContentKitBlock,
-    UIRenderEvent,
-    ContentKitRenderOutput,
     ContentKitContext,
+    ContentKitDefaultAction,
+    ContentKitRenderOutput,
+    UIRenderEvent,
 } from '@gitbook/api';
 
 import { RuntimeCallback, RuntimeContext } from './context';
 
+type PlainObjectValue =
+    | number
+    | string
+    | boolean
+    | PlainObject
+    | undefined
+    | null
+    | PlainObjectValue[];
 type PlainObject = {
-    [key: string]: number | string | boolean | PlainObject | undefined | null;
+    [key: string]: PlainObjectValue;
 };
 
 export interface ComponentRenderCache {
@@ -36,6 +45,10 @@ export interface ComponentDefinition<Context extends RuntimeContext = RuntimeCon
     render: RuntimeCallback<[UIRenderEvent], Promise<Response>, Context>;
 }
 
+export type ComponentAction<Action = void> = Action extends void
+    ? ContentKitDefaultAction
+    : ContentKitDefaultAction | Action;
+
 /**
  * Create a component instance. The result should be bind to the integration using `blocks`.
  */
@@ -43,7 +56,7 @@ export function createComponent<
     Props extends PlainObject = {},
     State extends PlainObject = {},
     Action = void,
-    Context extends RuntimeContext = RuntimeContext
+    Context extends RuntimeContext = RuntimeContext,
 >(component: {
     /**
      * Unique identifier for the component in the integration.
@@ -53,14 +66,20 @@ export function createComponent<
     /**
      * Initial state of the component.
      */
-    initialState?: State | ((props: Props, renderContext: ContentKitContext) => State);
+    initialState?:
+        | State
+        | ((props: Props, renderContext: ContentKitContext, context: Context) => State);
 
     /**
      * Callback to handle a dispatched action.
      */
     action?: RuntimeCallback<
-        [ComponentInstance<Props, State>, Action],
-        Promise<{ props?: Props; state?: State }>,
+        [ComponentInstance<Props, State>, ComponentAction<Action>],
+        Promise<
+            | { type?: 'element'; props?: Props; state?: State }
+            | { type: 'complete'; returnValue?: PlainObject }
+            | undefined
+        >,
         Context
     >;
 
@@ -73,16 +92,16 @@ export function createComponent<
         componentId: component.componentId,
         render: async (event, context) => {
             if (event.componentId !== component.componentId) {
-                return;
+                throw new Error(`Invalid component ID: ${event.componentId}`);
             }
 
             // @ts-ignore
-            const action = event.action as Action | undefined;
+            const action = event.action as ComponentAction<Action> | undefined;
             const props = event.props as Props;
             const state =
                 (event.state as State | undefined) ||
                 (typeof component.initialState === 'function'
-                    ? component.initialState(props, event.context)
+                    ? component.initialState(props, event.context, context)
                     : ((component.initialState || {}) as State));
 
             let cache: ComponentRenderCache | undefined = undefined;
@@ -97,24 +116,42 @@ export function createComponent<
                 dynamicState: (key) => ({ $state: key }),
             };
 
+            const wrapResponse = (output: ContentKitRenderOutput) => {
+                return new Response(JSON.stringify(output), {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(cache
+                            ? {
+                                  // @ts-ignore - I'm not sure how to fix this one with TS
+                                  'Cache-Control': `max-age=${cache.maxAge}`,
+                              }
+                            : {}),
+                    },
+                });
+            };
+
             if (action && component.action) {
-                instance = { ...instance, ...(await component.action(instance, action, context)) };
+                const actionResult = await component.action(instance, action, context);
+
+                // If the action is complete, return the result directly. No need to render the component.
+                if (actionResult?.type === 'complete') {
+                    return wrapResponse(actionResult);
+                }
+
+                instance = { ...instance, ...actionResult };
             }
 
             const element = await component.render(instance, context);
 
             const output: ContentKitRenderOutput = {
+                // for backward compatibility always default to 'element'
+                type: 'element',
                 state: instance.state,
                 props: instance.props,
                 element,
             };
 
-            return new Response(JSON.stringify(output), {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(cache ? { 'Cache-Control': `max-age=${cache.maxAge}` } : {}),
-                },
-            });
+            return wrapResponse(output);
         },
     };
 }

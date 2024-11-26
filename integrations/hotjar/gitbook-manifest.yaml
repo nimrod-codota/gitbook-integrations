@@ -12,9 +12,8 @@ script: ./src/index.ts
 # The following scope(s) are available only to GitBook Staff
 # See https://developer.gitbook.com/integrations/configurations#scopes
 scopes:
-    - space:script:inject
     - site:script:inject
-organization: d8f63b60-89ae-11e7-8574-5927d48c4877
+organization: gitbook
 contentSecurityPolicy:
     script-src: static.hotjar.com script.hotjar.com;
 summary: |
@@ -32,14 +31,6 @@ summary: |
 categories:
     - analytics
 configurations:
-    space:
-        properties:
-            tracking_id:
-                type: string
-                title: Hotjar Site ID
-                description: Available in Hotjar's Organization & sites section
-        required:
-            - tracking_id
     site:
         properties:
             tracking_id:
@@ -48,3 +39,4 @@ configurations:
                 description: Available in Hotjar's Organization & sites section
         required:
             - tracking_id
+target: site

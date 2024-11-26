@@ -9,6 +9,7 @@ import {
     FetchVisitorAuthenticationEventCallback,
 } from './events';
 import { Logger } from './logger';
+import { ExposableError } from './errors';
 
 const logger = Logger('integrations');
 
@@ -44,7 +45,7 @@ interface IntegrationRuntimeDefinition<Context extends RuntimeContext = RuntimeC
  * Create and initialize an integration runtime.
  */
 export function createIntegration<Context extends RuntimeContext = RuntimeContext>(
-    definition: IntegrationRuntimeDefinition<Context>
+    definition: IntegrationRuntimeDefinition<Context>,
 ) {
     const { events = {}, components = [] } = definition;
 
@@ -72,111 +73,134 @@ export function createIntegration<Context extends RuntimeContext = RuntimeContex
             const fetchBody = formData.get('fetch-body');
             const context = createContext(
                 JSON.parse(formData.get('environment') as string) as IntegrationEnvironment,
-                ev.waitUntil.bind(ev) // internally, waitUntil contains a check on 'this' to ensure this === FetchEvent so we bind it here before passing it down
+                ev.waitUntil.bind(ev), // internally, waitUntil contains a check on 'this' to ensure this === FetchEvent so we bind it here before passing it down
             ) as Context;
 
-            if (event.type === 'fetch' && definition.fetch) {
-                logger.info(`handling fetch ${event.request.method} ${event.request.url}`);
+            logger.info(`[${event.eventId}] ${event.type}`);
 
-                // Create a new Request that mimics the original Request
-                const request = new Request(event.request.url, {
-                    method: event.request.method,
-                    headers: new Headers(event.request.headers),
-                    body: fetchBody,
-                });
+            switch (event.type) {
+                case 'fetch': {
+                    logger.info(`handling fetch ${event.request.method} ${event.request.url}`);
 
-                const resp = await definition.fetch(request, context);
-                logger.debug(
-                    `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
-                        'content-type'
-                    )}`
-                );
-                return resp;
-            }
+                    if (!definition.fetch) {
+                        throw new ExposableError('Integration does not handle HTTP requests', 400);
+                    }
 
-            if (event.type === 'fetch_published_script' && definition.fetch_published_script) {
-                logger.info(`handling fetch_script`);
+                    // Create a new Request that mimics the original Request
+                    const request = new Request(event.request.url, {
+                        method: event.request.method,
+                        headers: new Headers(event.request.headers),
+                        body: fetchBody,
+                    });
 
-                const resp = await definition.fetch_published_script(event, context);
+                    const resp = await definition.fetch(request, context);
+                    logger.debug(
+                        `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
+                            'content-type',
+                        )}`,
+                    );
+                    return resp;
+                }
+                case 'fetch_published_script': {
+                    logger.info(`handling fetch_script`);
 
-                if (!resp) {
-                    logger.debug(`fetch_published_script is no-op, sending no-op script`);
+                    if (!definition.fetch_published_script) {
+                        throw new ExposableError(
+                            'Integration does not handle fetch_published_script',
+                            400,
+                        );
+                    }
 
-                    return new Response('/** no-op */', {
-                        headers: {
-                            'Content-Type': 'application/javascript',
-                        },
+                    const resp = await definition.fetch_published_script(event, context);
+
+                    if (!resp) {
+                        logger.debug(`fetch_published_script is no-op, sending no-op script`);
+
+                        return new Response('/** no-op */', {
+                            headers: {
+                                'Content-Type': 'application/javascript',
+                            },
+                        });
+                    }
+
+                    logger.debug(
+                        `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
+                            'content-type',
+                        )}`,
+                    );
+
+                    return resp;
+                }
+                case 'fetch_visitor_authentication': {
+                    logger.info(`handling fetch_visitor_authentication`);
+
+                    if (!definition.fetch_visitor_authentication) {
+                        throw new ExposableError(
+                            'Integration does not handle fetch_visitor_authentication',
+                            400,
+                        );
+                    }
+                    const resp = await definition.fetch_visitor_authentication(event, context);
+
+                    logger.debug(
+                        `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
+                            'content-type',
+                        )}`,
+                    );
+
+                    return resp;
+                }
+
+                case 'ui_render': {
+                    const component = components.find((c) => c.componentId === event.componentId);
+
+                    if (!component) {
+                        throw new ExposableError(`Component ${event.componentId} not found`, 404);
+                    }
+
+                    return await component.render(event, context);
+                }
+
+                default: {
+                    const cb = events[event.type];
+
+                    if (cb) {
+                        logger.info(`handling GitBook-generated event ${event.type}`);
+
+                        if (Array.isArray(cb)) {
+                            // @ts-ignore
+                            await Promise.all(cb.map((c) => c(event, context)));
+                        } else {
+                            // @ts-ignore
+                            await cb(event, context);
+                        }
+
+                        return new Response('OK', { status: 200 });
+                    }
+
+                    logger.info(`integration does not handle ${event.type} events`);
+                    return new Response(`Integration does not handle ${event.type} events`, {
+                        status: 200,
                     });
                 }
-
-                logger.debug(
-                    `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
-                        'content-type'
-                    )}`
-                );
-
-                return resp;
             }
-
-            if (
-                event.type === 'fetch_visitor_authentication' &&
-                definition.fetch_visitor_authentication
-            ) {
-                const resp = await definition.fetch_visitor_authentication(event, context);
-
-                logger.debug(
-                    `response ${resp.status} ${resp.statusText} Content-Type: ${resp.headers.get(
-                        'content-type'
-                    )}`
-                );
-
-                return resp;
-            }
-
-            if (event.type === 'ui_render') {
-                const component = components.find((c) => c.componentId === event.componentId);
-
-                if (!component) {
-                    return new Response('Component not defined', { status: 404 });
-                }
-
-                return await component.render(event, context);
-            }
-
-            const cb = events[event.type];
-
-            if (cb) {
-                logger.info(`handling GitBook-generated event ${event.type}`);
-
-                if (Array.isArray(cb)) {
-                    await Promise.all(cb.map((c) => c(event, context)));
-                } else {
-                    await cb(event, context);
-                }
-
-                // TODO: maybe the callback wants to return something
-                return new Response('OK', { status: 200 });
-            }
-
-            logger.info(`integration does not handle ${event.type} events`);
-            return new Response(`Integration does not handle ${event.type} events`, {
-                status: 200,
-            });
         } catch (err) {
-            logger.error(err.stack);
+            const error = err as Error | ExposableError;
+            logger.error(error.stack ?? error.message);
             return new Response(
                 JSON.stringify({
-                    error: err.message,
+                    error:
+                        error instanceof ExposableError ? error.message : 'Internal server error',
                 }),
                 {
-                    status: err.status || err.statusCode || err.code || 500,
+                    status: error instanceof ExposableError ? error.code : 500,
                     headers: { 'content-type': 'application/json' },
-                }
+                },
             );
         }
     }
 
-    addEventListener('fetch', (ev) => {
+    addEventListener('fetch', (ev: FetchEvent) => {
         ev.respondWith(handleWorkerDispatchEvent(ev));
     });
 }
